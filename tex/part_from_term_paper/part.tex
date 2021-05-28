@@ -1,0 +1,389 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[OT1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xypic}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{amsthm}
+\usepackage{xcolor}
+\usetikzlibrary{decorations.markings}
+\tikzstyle arrowstyle=[scale=1]
+\tikzstyle directed=[postaction={decorate,decoration={markings,
+    mark=at position .65 with {\arrow[arrowstyle]{stealth}}}}]
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\author{Федор Вылегжанин}
+\title{О возможной связи между соотношениями в группах и алгебрах, связанных с флаговыми полиэдральными произведениями}
+\date{}
+
+\newcommand{\Bigast}{\mathop{\scalebox{1.5}{\raisebox{-0.2ex}{$\ast$}}}}%
+
+
+%\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\pt}{pt}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\cone}{cone}
+\DeclareMathOperator{\Tor}{Tor}
+\DeclareMathOperator{\Ext}{Ext}
+\DeclareMathOperator{\Ker}{Ker}
+\DeclareMathOperator{\Img}{Im}
+\DeclareMathOperator{\pr}{proper}
+\DeclareMathOperator{\ab}{ab}
+\DeclareMathOperator{\sk}{sk}
+
+\def\CC{\mathbb{C}}
+\def\ZZ{\mathbb{Z}}
+\def\FF{\mathbb{F}}
+\def\QQ{\mathbb{Q}}
+\def\RR{\mathbb{R}}
+\def\NN{\mathbb{N}}
+\def\Nm{\NN_{\geq 0}^m}
+\def\RC{\mathrm{RC}}
+\def\RA{\mathrm{RA}}
+\def\R{\mathcal{R}}
+\def\Z{\mathcal{Z}}
+\def\K{\mathcal{K}}
+\def\Kt{\widetilde{\K}}
+\def\pk{\pi_\K}
+\def\pkt{\pi_\Kt}
+\def\ZK{\Z_\K}
+\def\RK{\R_\K}
+\def\RKt{\R_{\Kt}}
+\def\RCK{\RC_\K}
+\def\RCKt{\RC_{\Kt}}
+\def\OZK{\Omega\ZK}
+\def\DJ{\CC\mathrm{P}^\infty}
+\def\DJK{(\DJ)^\K}
+\def\ODJK{\Omega\DJK}
+
+
+\newtheorem{thm}{Теорема}[section]
+\newtheorem{lmm}[thm]{Лемма}
+\newtheorem{cnj}[thm]{Гипотеза}
+\newtheorem{prp}[thm]{Предложение}
+\newtheorem{crl}[thm]{Следствие}
+
+\theoremstyle{definition}
+
+\newtheorem{dfn}[thm]{Определение}
+%\newtheorem{ntn}[thm]{Обозначение}
+\newtheorem{rmk}[thm]{Замечание}
+\newtheorem{exm}[thm]{Пример}
+\begin{document}
+\maketitle
+
+
+
+\subsection{Группы, связанные с полиэдральными произведениями}
+%Определим ``алгебраические полиэдральные произведения'' по аналогии с полиэдральными произведениями как копределы соответствующих диаграмм, тип которых -- малая категория граней симплициального комплекса $\K$. Умножение в группах и алгебрах задействует только два элемента, поэтому результат зависит только от 1-остова симплициального комплекса. Мы приводим только явные конструкции.
+\begin{dfn}
+Пусть $G_1,\dots,G_m$ -- группы, $\K$ -- симплициальный комплекс. \emph{Граф-произведением групп} называется группа
+$$(\underline{G})^\K:=\Bigast_{i=1}^m G_i /\left(g_ig_j=g_jg_i,~g_i\in G_i,~g_j\in G_j,~\{i,j\}\in\K\right).$$
+\end{dfn}
+Ясно, что граф-произведение зависит только от 1-остова $\K.$ 
+\begin{dfn} Взяв в предыдущем определении %$G_i=\ZZ,$ получим \emph{прямоугольную группу Артина}
+%$$\RA_\K:=\langle g_1,\dots, g_m\mid g_ig_j=g_jg_i,~\{i,j\}\in\K\rangle;$$
+%взяв
+$G_i=\ZZ_2,$ получим \emph{прямоугольную группу Кокстера}
+$$\RC_\K:=\langle g_1,\dots, g_m\mid g_i^2=\id,~i=1\dots m;~g_ig_j=g_jg_i,~\{i,j\}\in\K\rangle.$$
+\end{dfn}
+
+\begin{prp}[\cite{prv,pv}]
+Пусть $G_1,\dots,G_m$ -- топологические группы, $\K$ -- симплициальный комплекс. Тогда есть каноническое гомотопическое расслоение
+$$(E\underline{G},\underline{G})^\K\to(B\underline{G})^\K\to\prod_{i=1}^mBG_i.$$\qed
+\end{prp}
+\begin{crl}[\cite{pv}, теорема 3.2]
+Пусть $G_1,\dots,G_m$ -- дискретные группы. Тогда
+\begin{enumerate}
+\item $\pi_1((B\underline{G})^\K)\simeq (\underline{G})^\K;$
+\item $\pi_k((B\underline{G})^\K)\simeq\pi_k((E\underline{G},\underline{G})^\K),~k\geq 2;$ 
+\item $(E\underline{G},\underline{G})^\K$ и $(B\underline{G})^\K$ асферичны тогда и только тогда, когда $\K$ флаговый;
+\item Имеем точную последовательность фундаментальных групп
+$$1\to\pi_1((E\underline{G},\underline{G})^\K)\to (\underline{G})^\K\overset{\pi}{\longrightarrow}\prod_{i=1}^m G_i\to 0.$$
+\end{enumerate}\qed
+\end{crl}
+Если все $G_i$ абелевы, то в последней точной последовательности $\pi$ -- это абелианизация. Поэтому в этих случаях 
+$$\pi_1((E\underline{G},\underline{G})^\K)\simeq ((\underline{G})^\K)'.$$
+Тем самым с помощью полиэдральных произведений можно изучать коммутанты граф-произведений абелевых групп, или, в общем случае, \emph{декартовы подгруппы} $\Ker((\underline{G})^\K\to\prod_{i=1}^m G_i)$.
+
+Рассмотрение частного случая $G_i=\ZZ_2$ даёт
+\begin{crl}
+Пусть $\K$ -- флаговый симплициальный комплекс. Тогда
+\begin{enumerate}
+\item $\pi_1((\RR\mathrm{P}^\infty)^\K)\simeq \RCK;$
+\item $\RK$ и $(\RR\mathrm{P}^\infty)^\K$ асферичны;
+\item $\pi_1(\RK)\simeq\RC'_\K.$
+\end{enumerate}
+\end{crl}
+\begin{proof}
+Достаточно заметить, что $B\ZZ_2=\RR\mathrm{P}^\infty,$ а пара $(D^1,S^0)$ гомотопически эквивалентна паре $(S^\infty,S^0)=(E\ZZ_2,\ZZ_2).$
+\end{proof}
+
+\subsection{Алгебры, связанные с полиэдральными произведениями}
+
+\begin{dfn}
+Градуированной \emph{алгеброй} Ли будем называть обычную алгебру Ли, обладающую градуировкой (выполняется обычное тождество Якоби и обычная антикоммутативность $[y,x]=-[x,y]$).
+
+Градуированной \emph{супералгеброй} Ли назовём градуированную абелеву группу с градуированно-антикоммутативной скобкой и градуированным тождеством Якоби:
+$$[y,x]=-(-1)^{|x||y|}[x,y];\quad (-1)^{|x||z|}[x,[y,z]]+(-1)^{|x||y|}[y,[z,x]]+(-1)^{|y||z|}[z,[x,y]]=0.$$
+
+Например, если $X$ -- топологическое пространство, то $\pi_*(\Omega X)\otimes\QQ$ -- градуированная супералгебра Ли (вместе с произведением Самельсона, т.е. со смещённым произведением Уайтхеда).
+
+Свободная алгебра Ли обозначается как $FL(u_1,\dots,u_m);$ свободная супералгебра Ли -- как $FSL(u_1,\dots,u_m);$ свободная ассоциативная алгебра (т.е. тензорная алгебра) -- как $T(u_1,\dots,u_m).$
+\end{dfn}
+\begin{dfn}
+Над любым кольцом с единицей можно определить граф-произведение алгебр и супералгебр Ли:
+$$L_\K := FL(u_1,\dots, u_m)/\left([u_i,u_i]=0,~i=1\dots m;~[u_i,u_j]=0,~\{i,j\}\in\K\right);$$
+$$SL_\K := FSL(u_1,\dots, u_m)/\left([u_i,u_i]=0,~i=1\dots m;~[u_i,u_j]=0,~\{i,j\}\in\K\right);$$
+\end{dfn}
+
+\begin{prp}[\cite{ToricTopology}, Предложение 8.4.1]
+Имеем точную последовательность градуированных супералгебр Ли
+$$0\to\pi_*(\OZK)\otimes\QQ\to\pi_*(\DJK)\otimes \QQ\to CL(u_1,\dots,u_m)\to 0$$
+
+и алгебр Понтрягина
+$$0\to H_*(\OZK;k)\to H_*(\DJK;k)\to \Lambda_k[u_1,\dots,u_m]\to 0;$$
+$k$ -- произвольное коммутативное кольцо с единицей.\qed\end{prp}
+
+\begin{prp}[\cite{pr}] Если $\K$ флаговый, то $\pi_*(\DJK)\otimes\QQ\simeq SL_\K.$\qed
+\end{prp}
+За счёт теоремы Милнора-Мура из этого предложения вытекает
+\begin{crl} Если $\K$ флаговый, $\FF$ -- поле характеристики ноль, то
+$$H_*(\DJK;\FF)\simeq T(u_1,\dots, u_m)/\left(u_i^2=0,~i=1\dots m;~u_iu_j+u_ju_i=0,~\{i,j\}\in\K\right).$$\qed
+\end{crl}
+\subsection{Образующие и соотношения (флаговый случай)}
+
+\begin{prp}[\cite{pv_artin}, теорема 5.2]
+Пусть $\K$ флаговый. Тогда $\pi_1((E\underline{G},\underline{G})^\K)=
+\Ker((\underline{G})^\K\to\prod_{i=1}^m G_i)$ имеет минимальный набор образующих, состоящий из всех вложенных коммутаторов вида
+$$(g_{k_1},(g_{k_2},\dots,(g_{k_{l-2}},(g_j,g_i))\dots)),$$
+где $g_k\in G_k\setminus\{\id\},~k_1<\dots<k_{l-2}<j>i,~k_s\neq i,~\forall s;~i$ -- наименьшая вершина в некоторой компоненте связности подкомплекса $\K_{\{k_1,\dots,k_{l-2},j,i\}},$ не содержащей $j.$\qed
+\end{prp}
+Частный случай:
+\begin{prp}[\cite{pv}, теорема 4.5]
+Пусть $\K$ флаговый. Тогда $\pi_1(\RK)=\RC'_\K$ имеет минимальный набор образующих, состоящий из всех вложенных коммутаторов вида
+$$(g_{k_1},(g_{k_2},\dots,(g_{k_{l-2}},(g_j,g_i))\dots)),$$
+где $g_k$ -- $k$-ая образующая $\RCK,$ $k_1<\dots<k_{l-2}<j>i,~k_s\neq i,~\forall s;~i$ -- наименьшая вершина в некоторой компоненте связности подкомплекса $\K_{\{k_1,\dots,k_{l-2},j,i\}},$ не содержащей $j.$\qed
+\end{prp}
+
+\begin{prp}[\cite{pv}, теорема 4.3]
+Пусть $\K$ флаговый. $\pi_1((E\underline{G},\underline{G})^\K)=
+\Ker((\underline{G})^\K\to\prod_{i=1}^m G_i)$ свободна тогда и только тогда, когда $\K^1$ -- хордовый граф.\qed
+\end{prp}
+
+\begin{prp}[\cite{gptw}, теорема 4.3]
+Пусть $\mathcal{K}$ флаговый, $\FF$ -- поле. Тогда $H_*(\OZK;\mathbb{F})$ имеет минимальный набор мультипликативных образующих, состоящий из всех вложенных коммутаторов вида
+$$[u_{k_1},[u_{k_2},\dots,[u_{k_{l-2}},[u_j,u_i]]\dots]],$$
+где $k_1<\dots<k_{l-2}<j>i,~k_s\neq i,~\forall s;~i$ -- наименьшая вершина в некоторой компоненте связности подкомплекса $\K_{\{k_1,\dots,k_{l-2},j,i\}},$ не содержащей $j.$\qed
+\end{prp}
+\begin{prp}[\cite{gptw}]
+Пусть $\K$ флаговый, $\FF$ -- поле. $H_*(\OZK;\mathbb{F})$ свободна тогда и только тогда, когда $\K^1$ -- хордовый граф.\qed
+\end{prp}
+\subsection{Мультиградуировка; ряды Пуанкаре}
+\begin{dfn}
+Пусть $X$ -- топологическое пространство. Его числа Бетти и эйлерова характеристика определяются как
+$$b_i(X):=\dim H_i(X),~\chi(X):=\sum_{i} (-1)^i b_i(X).$$
+Определим также \emph{приведённые} числа Бетти и эйлерову характеристику:
+$$\widetilde{b}_i(X):=\dim\widetilde{H}_i(X),~\widetilde{\chi}(X):=\sum_{i}(-1)^i\,\widetilde{b}_i(X).$$
+Очевидно, $\widetilde{b}_i(X)=b_i(X)$ при $i\neq \{0,-1\};$ если $X\neq\varnothing,$ то $$\widetilde{b}_0(X)=b_0(X)-1,\quad\widetilde{b}_{-1}(X)=b_{-1}(X)=0.$$
+Отдельно рассматривается случай $X=\varnothing:$ имеем $$\widetilde{b}_0(\varnothing)=b_0(\varnothing)=0,\quad\widetilde{b}_{-1}(\varnothing)=0,~b_{-1}(\varnothing)=1.$$
+В любом случае $\widetilde{\chi}(X)=\chi(X)-1.$
+\end{dfn}
+
+Под мультиградуировкой всегда будем понимать градуировку ассоциативной алгебры элементами полугруппы $\mathbb{N}_{\geq 0}^m.$ Базисные векторы обозначим как $e_1,\dots,e_m;$ степень однородного элемента $a$ -- как $|a|.$ Если $J\subset[m],$ вместо степени $\sum_{j\in J}e_j\in\Nm$ будем писать просто ``степень $J$''. Часто, хотя и не всегда, алгебра будет порождена $m$ образующими, и $i$-ая образующая имеет степень $e_i.$
+\begin{dfn}
+Пусть $V$ -- мультиградуированное векторное пространство. Его \emph{рядом Пуанкаре} будем называть формальный степенной ряд от $m$ переменных $\lambda=(\lambda_1,\dots,\lambda_m)$
+$$F(V;\lambda):=\sum_{\alpha\in \mathbb{N}_{\geq 0}^m} \dim(V_\alpha)\cdot \lambda^\alpha,\quad\lambda^\alpha:=\prod_{i=1}^m \lambda_i^{\alpha_ie_i}.$$
+\end{dfn}
+Аналогично соглашению выше, если $J\subset[m],$ вместо $\lambda^{\sum_{j\in J}e_j}=\prod_{j\in J}\lambda_j$ будем писать просто $\lambda^J.$
+
+Следующее почти очевидное предложение несколько раз используется в разделе 6.3.
+\begin{prp}
+Ряд Пуанкаре обладает следующими свойствами:
+\begin{enumerate}
+\item $F(V_1\oplus V_2;\lambda)=F(V_1;\lambda)+F(V_2;\lambda);$
+\item $F(V_1\otimes V_2;\lambda)=F(V_1;\lambda)\cdot F(V_2;\lambda);$
+\item Если $0\to A_1\to A_2\to A_3\to 0$ -- точная последовательность алгебр Хопфа, то $$F(A_2;\lambda)=F(A_1;\lambda)\cdot F(A_3;\lambda).$$
+\end{enumerate}
+\end{prp}
+\begin{proof}
+Очевидно, если $\{v_i\}_{i\in I}$ -- базис векторного пространства $V,$ то $F(V;\lambda)=\sum_{i\in I}\lambda^{|v_i|}.$
+\begin{enumerate}
+\item Базис прямой суммы -- это объединение базисов.
+\item Базис тензорного произведения -- это попарные тензорные произведения базисных векторов.
+\item Как векторное пространство, расширение одной алгебры Хопфа с помощью другой -- это тензорное произведение.
+\end{enumerate}
+\end{proof}
+
+
+Напомним, что имеют место следующие точные последовательности (групп и алгебр Ли):
+$$1\to \pi_1(\RK)\hookrightarrow (\ZZ_2)^\K \overset{\ab}{\longrightarrow} (\ZZ_2)^m\to 0,$$
+$$0\to \pi_*(\OZK)\otimes\FF\hookrightarrow SL^\K \overset{\ab}{\longrightarrow} CL(u_1,\dots,u_m)\to 0,$$
+где
+$$(\ZZ_2)^\K=F(g_1,\dots,g_m)/\left(g_i^2=\id,~i=1\dots m;~(g_i,g_j)=\id,~\{i,j\}\in\K\right),$$
+$$SL^\K=FSL(u_1,\dots,u_m)/\left([u_i,u_i]=0,~i=1\dots m;~[u_i,u_j]=0,~\{i,j\}\in \K\right).$$
+\subsection{Отображение Магнуса и нижний центральный ряд}
+Пусть $G$ -- произвольная группа. Обозначим $(g,h):=g^{-1}h^{-1}gh$ для $g,h\in G$ и $(A,B):=\{(a,b):~a\in A,~b\in B\}$ для $A,B\subset G.$
+\begin{dfn}
+\emph{Нижний центральный ряд} группы определяется индуктивно: $$\gamma_1(G):=G;~\gamma_{n+1}(G):=(G,\gamma_n(G)).$$
+\end{dfn}
+\begin{prp}[\cite{magnus}] Градуированная группа
+$$L(G):=\bigoplus_{k=1}^\infty \gamma_k(G)/\gamma_{k+1}(G)$$ обладает естественной структурой алгебры Ли относительно группового коммутатора. Её называют \emph{присоединённой алгеброй Ли} группы $G.$
+\end{prp}
+Определим теперь вложение Магнуса. Пусть $X$ -- фиксированное множество, $F(X)$ -- свободная группа с базисом $X.$ Рассмотрим кольцо $A=\ZZ\langle\!\langle X\rangle\!\rangle$ некоммутативных ассоциативных формальных степенных рядов от переменных $\alpha_x,~\forall x\in X$ со стандартной $\NN_{\geq 0}$-градуировкой. Это свободная ассоциативная алгебра с базисом $X;$ в частности, это универсальная обёртывающая свободной алгебры Ли $FL(X).$ Элементы $FL(X)$ в $A$ называются \emph{лиевыми элементами}.
+
+Группу обратимых элементов $A$ будем обозначать как $A^\times.$
+\begin{dfn}
+\emph{Вложение Магнуса} -- это гомоморфизм $\mu:F(X)\to A^\times,$ заданный на образующих как $x\mapsto 1+\alpha_x.$ 
+\end{dfn}
+Каждому степенному ряду $\sigma\in A^\times\setminus\{1\}$ сопоставим его \emph{девиацию} -- первое нетривиальное однородное слагаемое, отличное от 1. Запишем формулой:
+$$\delta(\sigma):=\sigma_i,\text{ где }i=\min\{j\in\NN:~\sigma_j\neq 0\}.$$
+По определению также положим $\delta(1):=0.$
+\begin{prp}[\cite{magnus}]
+\begin{enumerate}
+\item $\mu$ инъективно;
+\item Если $w\in F(X),~w\neq\id,$ то $\delta(\mu(w))$ -- лиев элемент;
+\item Сопоставление $w\mapsto \delta(\mu(w))$ индуцирует изоморфизм алгебр Ли $L(F(X))\to FL(X).$
+\end{enumerate}
+\end{prp}
+
+Вложение Магнуса можно использовать на практике для поиска соотношений в присоединённых алгебрах Ли. А именно: пусть $G=\langle x_1,\dots, x_N\mid r_1,\dots, r_M\rangle$ -- любое копредставление. Ясно, что сюръекция $\pi:F(X)\to G$ индукцирует $L(\pi):FL(X)\to L(G),$ то есть некоторое копредставление алгебры Ли $L(G).$
+
+Каждому соотношению $r_i\in F(X)$ соответствует  однородный элемент в $[r_i]\in FL(X)$ (более точно: если $r_i\in \gamma_k(F(X))\setminus \gamma_{k+1}(F(X)),$ то $[r_i]\in FL_k(X)$). Этот элемент лежит в ядре $L(\pi),$ то есть является соотношением в $L(G);$ его можно вычислить с помощью вложения Магнуса. В общем случае могут быть и другие соотношения.
+\subsection{Взвешенное отображение Магнуса}
+Рассмотрим обобщение классической конструкции, описанной выше. Пусть $G=\langle x_1,\dots, x_N\mid r_1,\dots, r_M\rangle$ -- фиксированное копредставление, и выбраны элементы $d_1,\dots, d_N\in \Nm$ -- ``степени образующих''.
+
+Градуируем алгебру $A=\ZZ\langle\!\langle a_1,\dots, a_N\rangle\!\rangle$ как $|a_i|:=d_i$ и рассмотрим вложение Магнуса $F(X)\overset{\mu}{\longrightarrow} A^\times.$ Для слова $w\in F(X)$ формальный степенной ряд $\mu(w)\in A^\times$ теперь может иметь сильно больше однородных компонент, являющихся лиевыми элементами; возможно, есть способ формализовать это в форме некого гомоморфизма алгебр Ли, но пока это неясно.
+\subsection{Формулировка гипотезы}
+Вспомним, что образующие $\RC'_\K$ имеют вид
+$$\Gamma_{i\in J}=(g_{k_1},(g_{k_2},\dots,(g_{k_{s-2}},(g_j,g_i))\dots))$$ для некоторых наборов $J=\{g_{k_1},\dots,g_{k_{s-2}},g_j,g_i\}\subset [m].$ Припишем образующей $\Gamma_{i\in J}$ степень $d_{i\in J}:=\sum_{j\in J}e_j\in \Nm.$ Это даст $\Nm$-градуировку на $\ZZ\langle\!\langle a_1,\dots, a_N\rangle\!\rangle.$
+
+Также мы можем рассмотреть коммутаторную подалгебру $[L^\K,L^\K]$ в граф-алгебре Ли $L_\K;$ ``с точностью до знаков'', она аналогична коммутаторной подалгебре Ли $[SL^\K,SL^\K]=\pi_*(\OZK)\otimes\FF.$ Поэтому $[L^\K,L^\K]$ имеет базис такого же вида, что и $[SL^\K,SL^\K]:$ доказательство проходит по той же схеме. Этот базис имеет ту же мощность, что и набор образующих $\RC'_\K;$ градуируем его тем же образом. Свободная ассоциативная алгебра $A=\ZZ\langle\!\langle a_1,\dots, a_n\rangle\!\rangle$ -- это универсальная обёртывающая свободной алгебры Ли $FL(a_1,\dots,a_N),$ которую можно отобразить в $L^\K,$ задав тем самым $L^\K$ образующими и соотношениями. Это значит, что у лиевых элементов алгебры $A$ корректно определены образы в $L^\K.$
+
+Из доказательства теоремы 3.6 ясно, что можно выбрать соотношения между образующими $\RC'_\K$ так, что каждое соотношение ``относится'' к какому-то из полных подкомплексов $\K_J,~J\subset[m].$
+\begin{cnj} Пусть соотношение $R\in F(X)$ в группе $\RC'_\K$ относится к полному подкомплексу $\K_J.$ Тогда градуированная компонента степенного ряда $\mu(R)\in A^\times,$ имеющая степень $\sum_{j\in J} e_j,$ -- лиев элемент, который является соотношением в $L^\K.$
+\end{cnj}
+\subsection{Примеры}
+\subsubsection{Граница квадрата}
+%\boxed{
+		\begin{tikzpicture}[scale=1, inner sep=2mm]
+		\coordinate (1) at (0,0);
+		\coordinate (2) at (1,0);
+		\coordinate (4) at (0,1);
+		\coordinate (3) at (1,1);
+		
+		% Draw the edges
+		\draw (1) -- (2) -- (3) -- (4) -- (1);
+		
+		% Draw all of the vertices
+		\foreach \i in {1, ..., 4} {\fill (\i) circle (2.5pt);}
+		
+		% Label the vertices
+		\draw (1) node[left] {$1$};
+		\draw (2) node[right] {$2$};
+		\draw (3) node[right] {$3$};
+		\draw (4) node[left] {$4$};
+		\end{tikzpicture}
+		
+У коммутанта группы $$\RCK=\langle g_1,g_2,g_3,g_4\mid g_i^2=\id;~(g_1,g_2)=(g_2,g_3)=(g_3,g_4)=(g_4,g_1)=\id\rangle$$ две образующие $$x_1=(g_3,g_1),~x_2=(g_4,g_2)$$ и единственное соотношение $$R_{1234}=x_1^{-1}x_2^{-1}x_1x_2\in F(x_1,x_2).$$
+Имеем $$\deg x_1 = e_3+e_1=(1,0,1,0),~\deg x_2=e_4+e_2=(0,1,0,1).$$
+Слову $R_{1234}$ соответствует формальный степенной ряд
+\begin{equation*}
+r_{1234}=(1+a_1)^{-1}(1+a_2)^{-1}(1+a_1)(1+a_2)=1+\underbrace{(a_1a_2-a_2a_1)}_{\deg = (1,1,1,1)}+\underbrace{(a_1a_2a_1-a_1a_1a_2)}_{\deg=(2,1,2,1)}+\underbrace{(a_2a_2a_1-a_2a_1a_2)}_{\deg=(1,2,1,2)}+\dots\in A^\times.
+\end{equation*}
+
+Взяв градуированную компоненту степени $e_1+e_2+e_3+e_4,$ получаем соотношение $a_1a_2-a_2a_1,$ то есть $[a_1,a_2]=0.$ Это действительно соотношение между $a_1=[u_3,u_1]$ и $a_2=[u_4,u_2]$ -- образующими коммутаторной подалгебры в алгебре Ли
+$$L^\K=\langle u_1,u_2,u_3,u_4\mid [u_i,u_i]=\id;~[u_1,u_2]=[u_2,u_3]=[u_3,u_4]=[u_4,u_1]=0\rangle.$$
+То же соотношение верно в $SL^\K.$
+
+\subsubsection{Комплекс $\K_3$}
+		\begin{tikzpicture}[scale=1, inner sep=2mm]
+		\coordinate (3) at (0,-0.2);
+		\coordinate (5) at (-0.6,-1.1);
+		\coordinate (6) at (0.6,-1.1);
+		\coordinate (2) at (-1,0);
+		\coordinate (4) at (1,0);
+		\coordinate (1) at (0,1);
+%		\coordinate (a) at (-1.5, 0.5);
+		
+		% Draw the edges
+		\draw (1) -- (2) -- (5) -- (6) --(4) -- (3)  -- (1);
+		\draw (2) -- (3);
+		\draw (1) -- (4);
+%		\draw (1)  to [out=90,in=-135] (4);
+%		\draw[dashed] (1) to [out=0,in=-140] (5);
+%		\draw[dashed] (1) -- (6);
+%		\draw[dashed] (2)--(6);
+		
+		% Draw all of the vertices
+		\foreach \i in {1, ..., 6} {\fill (\i) circle (2.5pt);}
+		
+		% Label the vertices
+		\draw (1) node[left] {$1$};
+		\draw (2) node[left] {$2$};
+		\draw (3) node[below] {$3$};
+		\draw (4) node[right] {$4$};
+		\draw (5) node[left] {$5$};
+		\draw (6) node[right] {$6$};
+%		\draw (a) node[left] {(a)};
+		\end{tikzpicture}
+		Это третий из десяти минимальных симплициальных комплексов, таких что в $H^*(\ZK)$ есть нетривиальные произведения Масси.
+		
+		Образующие в $\RC'_\K$ (для наглядности вместо некоторых $x_i$ пишем $y_i$ и $z_i$):
+$$x_1=(g_5,g_1),~\deg x_1 = (1,0,0,0,1,0);\quad\qquad\qquad y_1=(g_2,(g_6,g_1)),~\deg y_1 = (1,1,0,0,0,1);$$
+$$x_2=(g_6,g_1),~\deg x_2 = (1,0,0,0,0,1);\quad\qquad\qquad y_2=(g_3,(g_5,g_1)),~\deg y_2 = (1,0,1,0,1,0);$$
+$$x_3=(g_4,g_2),~\deg x_3 = (0,1,0,1,0,0);\quad\qquad\qquad y_3=(g_3,(g_6,g_1)),~\deg y_3 = (1,0,1,0,0,1);$$
+$$x_4=(g_6,g_2),~\deg x_4 = (0,1,0,0,0,1);\quad\qquad\qquad y_4=(g_4,(g_5,g_1)),~\deg y_4 = (1,0,0,1,1,0);$$
+$$x_5=(g_5,g_3),~\deg x_5 = (0,0,1,0,1,0);\quad\qquad\qquad y_5=(g_5,(g_6,g_1)),~\deg y_5 = (1,0,0,0,1,1);$$
+$$x_6=(g_6,g_3),~\deg x_6 = (0,0,1,0,0,1);\quad\qquad\qquad y_6=(g_3,(g_6,g_2)),~\deg y_6 = (0,1,1,0,0,1);$$
+$$x_7=(g_5,g_4),~\deg x_7 = (0,0,0,1,1,0);\quad\qquad\qquad y_7=(g_2,(g_5,g_4)),~\deg y_7 = (0,1,0,1,1,0);$$
+$$z_1=(g_2,(g_3,(g_6,g_1))),~\deg z_1 =(1,1,1,0,0,1);\quad y_8=(g_4,(g_6,g_2)),~\deg y_8 = (0,1,0,1,0,1);$$
+$$z_2=(g_3,(g_4,(g_5,g_1))),~\deg z_2 =(1,0,1,1,1,0);\quad y_9=(g_4,(g_5,g_3)),~\deg y_9 = (0,0,1,1,1,0);$$
+$$z_3=(g_3,(g_5,(g_6,g_1))),~\deg z_3 =(1,0,1,0,1,1);\quad y_{10}=(g_5,(g_6,g_3)),~\deg y_{10} = (0,0,1,0,1,1).$$
+
+	Им соответствуют образующие в $L^\K:~a_1,\dots,c_3,$ которые получаются заменой $g_i$ на $u_i,$ круглых скобок на квадратные.
+
+Соотношения в фундаментальной группе (подкомплексов с нетривиальными $\Pi_1$ три: две границы пятиугольника и весь комплекс целиком):
+$$R_{12456}=x_4x_2y_1^{-1}x_1^{-1}x_7y_7^{-1}x_3^{-1}x_1y_4^{-1}x_3y_1x_2^{-1}x_3^{-1}y_8x_4^{-1}x_2y_4x_1^{-1}x_7^{-1}y_5x_2^{-1}x_7x_4y_8^{-1}x_3y_7x_7^{-1}x_4x_2y_5^{-1}x_1x_2^{-1},$$
+$$R_{23456}=x_4y_6^{-1}x_5^{-1}x_7y_7^{-1}x_3x_5^{-1}y_9^{-1}x_3y_6x_4^{-1}x_6^{-1}x_4x_3^{-1}y_8x_4^{-1}x_6y_9x_5^{-1}x_7^{-1}y_{10}x_6^{-1}x_7x_4y_8^{-1}x_3y_7x_7^{-1}x_4^{-1}x_6y_{10}^{-1}x_5,$$
+$$R_{123456}=x_4y_6^{-1}x_2y_1^{-1}z_1y_3^{-1}y_2x_1^{-1}x_5{-1}x_7y_7^{-1}x_3^{-1}x_5y_9^{-1}x_1y_2^{-1}z_2y_4^{-1}x_3y_3z_1^{-1}y_1\cdot$$ $$\cdot x_2^{-1}y_6x_4^{-1}x_6^{-1}x_4x_3^{-1}y_8x_4^{-1}x_6x_2y_3^{-1}y_4z_2^{-1}y_2x_1^{-1}y_9x_5^{-1}x_7^{-1}x_5y_5z_3^{-1}y_3x_2^{-1}x_5^{-1}\cdot$$ $$\cdot y_{10}x_6^{-1}x_7x_4y_8^{-1}x_3y_7x_7^{-1}x_4^{-1}x_6y_{10}^{-1}x_5x_2y_3^{-1}z_3y_5^{-1}x_1y_2^{-1}y_3x_2^{-1}.$$
+Надо вычислить градуированные компоненты соответствующих степенных рядов:
+\begin{equation*}
+r_{12456}=1+\underbrace{([a_1,b_8]-[a_2,b_7]-[a_3,b_5]-[a_4,b_4]+[a_7,b_1]
+)}_{\deg=(1,1,0,1,1,1)}+\dots,
+\end{equation*}
+\begin{equation*}
+r_{23456}=1+\underbrace{([a_3,b_{10}]+[a_4,b_9]-[a_5,b_8]+[a_6,b_7]-[a_7,b_6])}_{\deg = (0,1,1,1,1,1)}+\dots,
+\end{equation*}
+\begin{equation*}
+r_{123456}=1+\dots+\underbrace{(-[a_1,[a_3,a_6]]-[a_2,[a_3,a_5]]
+ +[a_3,c_3]+[a_4,c_2]-[a_7,c_1]
+ -[b_2,b_8]+[b_3,b_7]+[b_1,b_9]-[b_4,b_6])}_{\deg=(1,1,1,1,1,1)}+\dots
+ \end{equation*}
+ 
+Вычисления (с помощью пакета SuperLie для Wolfram Mathematica) показывают, что выражения в скобках действительно являются соотношениями в $L^\K.$
+
+В $SL^\K$ верны похожие тождества, где у некоторых слагаемых другие знаки:
+\begin{equation*}
+[a_1,b_8]+[a_2,b_7]+[a_3,b_5]+[a_4,b_4]-[a_7,b_1]=0,
+\end{equation*}
+\begin{equation*}
+[a_3,b_{10}]+[a_4,b_9]-[a_5,b_8]+[a_6,b_7]+[a_7,b_6]=0,
+\end{equation*}
+\begin{equation*}
+-[a_1,[a_3,a_6]]+[a_2,[a_3,a_5]]
+ +[a_3,c_3]+[a_4,c_2]+[a_7,c_1]
+ -[b_2,b_8]+[b_3,b_7]+[b_1,b_9]+[b_4,b_6]=0.
+ \end{equation*}
+ 
+\bibliographystyle{abbrv}
+\bibliography{minibibliography}
+%\begin{thebibliography}{9}
+
+\end{document}
