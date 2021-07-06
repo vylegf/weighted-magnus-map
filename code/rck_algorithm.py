@@ -13,13 +13,13 @@ class Comm:
 			return
 
 		if len(args) == 1:
-			self.elems = args[0].elems[:]
+			self.elems  = args[0].elems[:]
 			self.invert = args[0].invert
 			return
 
 		if len(args) == 2:
 			elems, invert = args
-			self.elems = elems[:]
+			self.elems  = elems[:]
 			self.invert = invert
 			return
 
@@ -40,13 +40,11 @@ class Comm:
 			return Comm(self.elems[1:], self.invert)
 		else:
 			print('something is wrong: called Comm.Inner(), but len(Comm) <= 2.')
-			#throw exception
-			pass
+			return
 
 	def StringForm(self):
 		if len(self) < 2:
 			print('something is wrong: len(Comm)<2.')
-			#throw exception
 			return
 		if len(self) == 2:
 			return '({},{})'.format(self.elems[0], self.elems[1])
@@ -68,7 +66,6 @@ class Comm:
 
 class Word:
 	letters = []
-
 	def __init__(self, *args):
 		if len(args) == 0:
 			self.letters = []
@@ -110,9 +107,7 @@ class Word:
 	def __neg__(self):
 		if not len(self):
 			return Word()
-		ans = Word()
-		ans.letters = [-self.letters[i] for i in range(len(self)-1,-1,-1)]
-		return ans
+		return LTW([-self.letters[i] for i in reversed(range(len(self)))])
 
 	def __repr__(self):
 		return 'Word['+''.join(str(K) for K in self.letters)+']'
@@ -142,7 +137,7 @@ def Comm_CL(g,K):
 		return tcomm
 	else:
 		#Если K=L^{-1}, то (g,K)=(g,L^{-1})=L(g,L)^{-1}L^{-1}=K^{-1}(g,L)^{-1}K
-		return -CTW(K) - tcomm +CTW(K)
+		return -CTW(K)-tcomm +CTW(K)
 
 #считает (g,W) по формуле (g,ABCD) = (g,D)D^{-1}(g,C)C^{-1}(g,B)B^{-1}(g,A)BCD
 def Word_CL(g,W):
@@ -163,7 +158,7 @@ def Comm_CR(K,g):
 	return -Comm_CL(g,K)
 
 def Word_CR(W,g):
-	#БЕЗБОЖНЫЙ КОСТЫЛЬ ДЛЯ КОРРЕКТНОЙ РАБОТЫ Calc_TI:
+	#БЕЗБОЖНЫЙ КОСТЫЛЬ ДЛЯ КОРРЕКТНОЙ РАБОТЫ Calc_WI:
 	#благодаря ему можно вызывать Calc_WI(W,I) для W=число.
 	#возможно, его аналоги надо поставить и в других местах
 	if type(W) == type(1):
@@ -188,7 +183,6 @@ def Calc_WI(W,I):
 		return Word_CR(W, I[0])
 	return Calc_WI(W, I[1:])+Word_CR(W,I[0])+Calc_WI(Word_CR(W,I[0]),I[1:])
 
-
 #переставляет два внутренних элемента коммутатора:
 #например, из (a,(b,(c,d))) делает слово, где на последних позициях везде (d,c)
 def Comm_TTI(K):
@@ -202,10 +196,7 @@ def Comm_TTI(K):
 
 #переставляет два внутренних элемента каждого из коммутаторов
 def Word_TTI(W):
-	ans = Word()
-	for K in W.letters:
-		ans += Comm_TTI(K)
-	return ans
+	return sum(map(Comm_TTI, W.letters), start=Word())
 
 #просто переставляет эту позицию с той, которая чуть правее
 def Comm_SimpleSwapRight(K, pos):
@@ -238,21 +229,15 @@ def Comm_SimpleSwapRight(K, pos):
 		ba,
 		Comm([b]+tail,False)])
 
-	for x in head[::-1]:
+	for x in reversed(head):
 		wd = Word_CL(x,wd)
 	return wd
 #--------------------------------------------------------------------------
 #          Панов-Верёвкин
 #--------------------------------------------------------------------------
-def Word_MaxToItsPlace(W):
-	ans = Word()
-	for K in W.letters:
-		ans += Comm_MaxToItsPlace(K)
-	return ans
-
 #добиваемся того, чтобы максимум стоял на предпоследнем месте
 def Comm_MaxToItsPlace(K):
-	if K.invert == True:
+	if K.invert:
 		return -Comm_MaxToItsPlace(-K)
 	els = K.elems
 	maxpos = els.index(max(els))
@@ -268,13 +253,14 @@ def Comm_MaxToItsPlace(K):
 		return Word_MaxToItsPlace(wd)
 	if maxpos == n-3:
 		m,a,b = els[-3:]
-
 		if a > b:
 			ab = Comm([a,b], False)
 			ba = Comm([a,b], True)
 		else:
 			ab = Comm([b,a], True)
 			ba = Comm([b,a], False)
+
+		#(m,(a,b))=(m,b)(m,a)((m,a),b)(b,a)(a,(m,b))(b,m)(a,m)(a,b)
 		wd = LTW([
 			Comm([m,b],False),
 			Comm([m,a],False),
@@ -284,21 +270,20 @@ def Comm_MaxToItsPlace(K):
 			Comm([m,b],True),
 			Comm([m,a],True),
 			ab])
-		#(m,(a,b))=(m,b)(m,a)((m,a),b)(b,a)(a,(m,b))(b,m)(a,m)(a,b)
 		for el in els[-4::-1]:
 			wd = Word_CL(el,wd)
 		return Word_MaxToItsPlace(wd)
 	else:
 		print('something is wrong in Comm_MaxToItsPlace')
 
+def Word_MaxToItsPlace(W):
+	return sum(map(Comm_MaxToItsPlace, W.letters), start=Word())
+
 #выражаем через базис коммутанта свободной группы
 #def Comm_ExpressInFree(K):
 #	return Word_SortElems(Comm_MaxToItsPlace(K))
 #def Word_ExpressInFree(W):
-#	ans = Word()
-#	for K in W.letters:
-#		ans += Comm_ExpressInFree(K)
-#	return ans
+#	return sum(map(Comm_ExpressInFree,W.letters),start=Word())
 
 #сортируем все элементы, кроме двух последних
 def Comm_SortElems(K):
@@ -314,13 +299,12 @@ def Comm_SortElems(K):
 	return CTW(K)
 
 def Word_SortElems(W):
-	ans = Word()
-	for K in W.letters:
-		ans += Comm_SortElems(K)
-	return ans
+	return sum(map(Comm_SortElems,W.letters),start=Word())
 
 #----------------------------------
 #ФУНКЦИИ С УЧАСТИЕМ ГРАФА (САМЫЕ ГЛАВНЫЕ)
+
+
 def Comm_ExpressThroughBasis(K,graph):
 	if K.invert == True:
 		return -Comm_ExpressThroughBasis(-K,graph)
@@ -333,10 +317,10 @@ def Comm_ExpressThroughBasis(K,graph):
 	if AreConnected(els[n-1], els[n-2], G):
 		return Word()
 	#добиваемся того, чтобы максимум стоял на своём месте
-	if maxpos != n - 2:
+	if maxpos != n-2:
 		return Word_ExpressThroughBasis(Comm_MaxToItsPlace(K), G)
 
-	last = els[n-1]
+	last = els[-1]
 
 	if AreInSameComponent(last, maxel, G):
 		fst = FirstStep(last, maxel, G)
@@ -346,7 +330,7 @@ def Comm_ExpressThroughBasis(K,graph):
 		mic = MinInComponent(last, G)
 		micpos = els.index(mic)
 		if micpos == n-1:
-			#нужное достигнуто, осталось отсортировать
+			#нужное достигнуто, осталось отсортировать и убить двухэлементные
 			return Word_KillObvious(Comm_SortElems(K),graph)
 		fst = FirstStep(last, mic, G)
 
@@ -378,10 +362,11 @@ def Comm_ExpressThroughBasis(K,graph):
 		print('something is wrong in Comm_ExpressThroughBasis: fstpos > n-3')
 
 def Word_ExpressThroughBasis(W,graph):
-	ans = Word()
-	for K in W.letters:
-		ans += Comm_ExpressThroughBasis(K,graph)
-	return ans
+	return sum(map(lambda x: Comm_ExpressThroughBasis(x,graph),W.letters),start=Word())
+#	ans = Word()
+#	for K in W.letters:
+#		ans += Comm_ExpressThroughBasis(K,graph)
+#	return ans
 
 def Word_KillObvious(W,graph):
 	ans = Word()
@@ -394,11 +379,11 @@ def Word_KillObvious(W,graph):
 #         вспомогательное про графы
 #------------------------------------------------------------
 
-#в одной ли компоненте связности
+#в одной ли компоненте связности?
 def AreInSameComponent(i,j, G):
 	return (j in nx.node_connected_component(G,i))
 
-#минимальный элемент компоненты, содержащей i
+#минимальный элемент компоненты связности, содержащей i
 def MinInComponent(i, G):
 	return min(nx.node_connected_component(G,i))
 
@@ -406,42 +391,124 @@ def MinInComponent(i, G):
 def AreConnected(i,j, G):
 	return G.has_edge(i,j)
 
-#первая вершина на пути от i к j
+#первая вершина на пути от i к j в графе G
 def FirstStep(i,j, G):
 	return nx.shortest_path(G,source=i,target=j)[1]
 
 #--------------------------------------------------------------------------
-#         нечто относящееся к моему алгоритму
+#         ключевые вычисления для общего алгоритма
 #--------------------------------------------------------------------------
 
-#вычисляет (g_m, w_I)
+#вычисляет T_I := (g_m, w_I)
 def Final_ExpressTI(m,I,graph):
 	return Word_ExpressThroughBasis(Calc_WI(m,I), graph)
 
 #вычисляет K^{w_I} = K(K,w_I)
-def Final_ConjugateCommutator(K,I,graph):
+def Final_ConjComm(K,I,graph):
 	return Word_ExpressThroughBasis(CTW(K)+Calc_WI(CTW(K),I),graph)
 
 #--------------------------------------------------------------------------
 # алгоритм для m-угольника!
 #--------------------------------------------------------------------------
-m=5
-graph=nx.cycle_graph(range(1,m+1))
 
-T = Final_ExpressTI(
-	m,
-	list(range(m-2,1,-1)),
-	graph)
+#из соотношения подграфа на первых (m-1) вершинах
+#делаем новое соотношение сопряжением
+def OldRelation(m, R, graph):
+	return Final_ConjComm(R, [m], graph)
 
-A = Final_ConjugateCommutator(
-	Comm([m-1,1],False),
-	list(range(m-2,1,-1)),
-	graph)
+#если все вершины образующей J соединены с m в графе,
+#и ни одна из вершин I не соединена,
+#то алгоритм сопоставляет этому набору данных соотношение.
+def NewRelation(m, I, J_generator, graph):
+	print('(m={}) The relation concerning I={}, J_generator={}:'.format(m, I,J_generator))
+	print('It has form ({},{}) {}^({}) = {}^({}{}) ({},{})'.format(
+		m, ''.join(map(str,I)),
+		J_generator, ''.join(map(str,I)),
+		J_generator, ''.join(map(str,I)), m,
+		m, ''.join(map(str,I))
+		))
 
-B = Word()
-for K in A.letters:
-	B += Final_ConjugateCommutator(K, [m], graph)
+	I.sort(reverse=True)
+	T = Final_ExpressTI(          m, I, graph)
+	A = Final_ConjComm (J_generator, I, graph)
+#	B = sum(map(lambd))
+	B = Word()
+	for K in A.letters:
+		B += Final_ConjComm(K, [m], graph)
 
-print('RELATION IN {}-gon: THESE WORDS ARE EQUAL:'.format(m))
-print(T+A)
-print(B+T)
+	print('T=({},{})={}'.format  (          m,''.join(map(str,I)), T))
+	print('A={}^({})={}'.format  (J_generator,''.join(map(str,I)), A))
+	print('B={}^({}{})={}'.format(J_generator,''.join(map(str,I)), m, B))
+	return (T,A,B)
+
+
+
+def PolygonRelation(m):
+	graph=nx.cycle_graph(range(1,m+1))
+	T,A,B = NewRelation(m, list(range(2,m-1)), Comm([m-1,1],False), graph)
+#	print('RELATION IN {}-gon: {}=id'.format(m,T+A-T-B))
+	return T+A-T-B
+#----------------------------------------------------------------------------
+#                  запись через список образующих
+#----------------------------------------------------------------------------
+
+#СДЕЛАТЬ! это взаимодействие с write_generators.py, которую я не помню когда писал
+
+#----------------------------------------------------------------------------
+#            технологии проверки написанного
+#----------------------------------------------------------------------------
+def Comm_ToList(K):
+	if K.invert:
+		return list(reversed(Comm_ToList(-K)))
+	if len(K)==2:
+		return [K.elems[0],K.elems[1],K.elems[0],K.elems[1]]
+	s = Comm_ToList(K.Inner())
+	return [K.elems[0]] + list(reversed(s)) + [K.elems[0]] + s
+
+def Word_ToList(W):
+	return sum(map(Comm_ToList,W.letters),start=[])
+
+def SimplifyList(L, m, graph):
+	upd = True
+	n = len(L)
+	while upd and n > 0:
+		upd = False
+		for i in range(n):
+			lt = L[i]
+			if lt in L[i+1:]:
+				nextpos = i+1+L[i+1:].index(lt)
+#				print(L[i],L[nextpos])
+				if all(AreConnected(lt,ot, graph) for ot in L[i+1:nextpos]):
+#					print('found: {}'.format(L[i:nextpos+1]))
+					n -= 2
+					L = L[:i]+L[i+1:nextpos]+L[nextpos+1:]
+					upd = True
+					break
+#			if not upd:
+#				print('nothing good with {}/{}'.format(i, n))
+	return L
+#		for i in range(m):
+
+#			i_positions = [j for j in range(len(L)) if L[j] == i]
+#			for t in range(len(i_positions)-1):
+#				pos =     i_positions[t]
+#				nextpos = i_positions[t+1]
+#				if nextpos == pos+1:
+#					upd=True
+#					L=L[:pos]+L[nextpos+1:]
+#					break
+
+
+#СДЕЛАТЬ! нужны по крайней мере функция, переводящая коммутатор в список цифр и функция, упрощающая строку
+#(по принципу: пока существует пара одинаковых цифр, такая что между ними пусто или все коммутируют с ними -- выкидывать)
+#rel = PolygonRelation(8)
+#wd= Word_ToList(rel)
+#swd = SimplifyList(wd, 8, nx.cycle_graph(range(1,9)))
+
+#если f(m) - количество букв в соотношении для m-угольника, то
+#f(4)=4, f(5)=34, f(6)=192, f(7)=944, f(8)=5780
+
+#print(rel,len(rel))
+#print('"'+''.join(map(str,wd))+'"')
+#print('simplified to "'+''.join(map(str,swd))+'"')
+#print(*Word_ToList(PolygonRelation(5)), sep='')
