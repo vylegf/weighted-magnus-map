@@ -5,9 +5,9 @@ import sys
 import time
 
 #вложенный коммутатор вида (a,(b,(c,(d,e)))) (или обратный к нему)
-#elems = [a,b,c,d,e]
+#elems = 'abcde'
 class Comm:
-	elems = []
+	elems = ''
 	invert = False
 
 	def __init__(self, *args):
@@ -16,22 +16,26 @@ class Comm:
 			return
 
 		if len(args) == 1:
-			self.elems  = args[0].elems[:]
+			self.elems  = args[0].elems
 			self.invert = args[0].invert
 			return
 
 		if len(args) == 2:
 			elems, invert = args
-			self.elems  = elems[:]
+			self.elems  = elems
 			self.invert = invert
 			return
 
 		print('error: too many args in Comm.__init__(*args)')
+		print('arguments:')
+#		print(*args)
+		print(args)
 
 	def __len__(self):
 		return len(self.elems)
 
 	def __neg__(self):
+#		print('Comm.__neg__({})'.format(self))
 		return Comm(self.elems, not self.invert)
 
 	def __eq__(self,other):
@@ -113,12 +117,12 @@ class Word:
 		return LTW([-self.letters[i] for i in reversed(range(len(self)))])
 
 	def __repr__(self):
-		return 'Word['+''.join(str(K) for K in self.letters)+']'
-#		return ''.join(str(K) for K in self.letters)
+#		return 'Word['+''.join(self.letters)+']'
+		return ''.join(str(K) for K in self.letters)
 
 	def __str__(self):
-		return 'Word['+''.join(str(K) for K in self.letters)+']'
-#		return ''.join(str(K) for K in self.letters)
+#		return 'Word['+''.join(self.letters)+']'
+		return ''.join(str(K) for K in self.letters)
 
 #-------------------------------------------------------------------------------------
 #                 простейшие операции
@@ -136,7 +140,7 @@ def LTW(lets):
 #считает (g,K)
 def Comm_CL(g,K):
 	#tcomm=(g,|K|)
-	tcomm = CTW(Comm([g]+K.elems, False))
+	tcomm = CTW(Comm(g+K.elems, False))
 	if K.invert == False:
 		return tcomm
 	else:
@@ -145,6 +149,7 @@ def Comm_CL(g,K):
 
 #считает (g,W) по формуле вида (g,ABCD) = (g,D)D^{-1}(g,C)C^{-1}(g,B)B^{-1}(g,A)BCD
 def Word_CL(g,W):
+#	print('Word_CL({},{})'.format(g,W))
 	if len(W) == 0:
 		return Word()
 	if len(W) == 1:
@@ -166,8 +171,8 @@ def Word_CR(W,g):
 	#БЕЗБОЖНЫЙ КОСТЫЛЬ ДЛЯ КОРРЕКТНОЙ РАБОТЫ Calc_WI:
 	#благодаря ему можно вызывать Calc_WI(W,I) для W=число.
 	#возможно, его аналоги надо поставить и в других местах
-	if type(W) == type(1):
-		return CTW(Comm([W,g],False))
+	if type(W) == type('1'):
+		return CTW(Comm(W+g,False))
 	return -Word_CL(g,W)
 
 #[a,b,c,d] -> запись элемента (((a,b),c),d) через обычные коммутаторы
@@ -194,7 +199,7 @@ def Calc_WI(W,I):
 def Comm_TTI(K):
 	if len(K) == 2:
 		a, b = K.elems
-		return CTW(Comm([b,a], not K.invert))
+		return CTW(Comm(b+a, not K.invert))
 	else:
 		a, K0 = K.elems[0], K.Inner()
 		TK0 = Comm_TTI(K0)
@@ -218,22 +223,22 @@ def Comm_SimpleSwapRight(K, pos):
 
 	#самую малость упрощает вычисления (наверно)
 	if a > b:
-		ab = Comm([a,b], False)
-		ba = Comm([a,b], True)
+		ab = Comm(a+b, False)
+		ba = Comm(a+b, True)
 	else:
-		ab = Comm([b,a], True)
-		ba = Comm([b,a], False)
+		ab = Comm(b+a, True)
+		ba = Comm(b+a, False)
 	#(a,(b,K0))=(a,K0)K0^{-1}(a,b)K0(K0,b)(b,(a,K0))(K0,a)(b,a)(b,K0)
 	wd = LTW([
-		Comm([a]+tail,False),
+		Comm(a+tail,False),
 		Comm(tail,True),
 		ab,
 		Comm(tail,False),
-		Comm([b]+tail,True),
-		Comm([b,a]+tail,False),
-		Comm([a]+tail,True),
+		Comm(b+tail,True),
+		Comm(b+a+tail,False),
+		Comm(a+tail,True),
 		ba,
-		Comm([b]+tail,False)])
+		Comm(b+tail,False)])
 
 	for x in reversed(head):
 		wd = Word_CL(x,wd)
@@ -260,21 +265,21 @@ def Comm_MaxToItsPlace(K):
 	if maxpos == n-3:
 		m,a,b = els[-3:]
 		if a > b:
-			ab = Comm([a,b], False)
-			ba = Comm([a,b], True)
+			ab = Comm(a+b, False)
+			ba = Comm(a+b, True)
 		else:
-			ab = Comm([b,a], True)
-			ba = Comm([b,a], False)
+			ab = Comm(b+a, True)
+			ba = Comm(b+a, False)
 
 		#(m,(a,b))=(m,b)(m,a)((m,a),b)(b,a)(a,(m,b))(b,m)(a,m)(a,b)
 		wd = LTW([
-			Comm([m,b],False),
-			Comm([m,a],False),
-			Comm([b,m,a],True),
+			Comm(m+b,False),
+			Comm(m+a,False),
+			Comm(b+m+a,True),
 			ba,
-			Comm([a,m,b],False),
-			Comm([m,b],True),
-			Comm([m,a],True),
+			Comm(a+m+b,False),
+			Comm(m+b,True),
+			Comm(m+a,True),
 			ab])
 		for el in els[-4::-1]:
 			wd = Word_CL(el,wd)
@@ -312,6 +317,7 @@ def Word_SortElems(W):
 
 
 def Comm_ExpressThroughBasis(K,graph):
+#	print('Comm_ExpressThroughBasis({})'.format(K))
 	if K.invert == True:
 		return -Comm_ExpressThroughBasis(-K,graph)
 	els = K.elems
@@ -348,17 +354,17 @@ def Comm_ExpressThroughBasis(K,graph):
 		#пользуемся тем, что (a,x)=id; b - наибольший
 		#поэтому (a,(b,x))=(x,(b,a))(a,b)(x,b)(b,a)(b,x)
 		if a > b:
-			ab = Comm([a,b], False)
-			ba = Comm([a,b], True)
+			ab = Comm(a+b, False)
+			ba = Comm(a+b, True)
 		else:
-			ab = Comm([b,a], True)
-			ba = Comm([b,a], False)
+			ab = Comm(b+a, True)
+			ba = Comm(b+a, False)
 		wd = LTW([
-			Comm([x,b,a], False),
+			Comm(x+b+a, False),
 			ab,
-			Comm([x,b], False),
+			Comm(x+b, False),
 			ba,
-			Comm([x,b], True)
+			Comm(x+b, True)
 			])
 		for el in els[-4::-1]:
 			wd = Word_CL(el,wd)
@@ -419,7 +425,7 @@ def Final_ConjComm(K,I,graph):
 #из соотношения подграфа на первых (m-1) вершинах
 #делаем новое соотношение сопряжением
 def OldRelation(m, R, graph):
-	return Final_ConjComm(R, [m], graph)
+	return Final_ConjComm(R, str(m), graph)
 
 #если все вершины образующей J соединены с m в графе,
 #и ни одна из вершин I не соединена,
@@ -433,13 +439,14 @@ def NewRelation(m, I, J_generator, graph):
 		m, ''.join(map(str,I))
 		))
 
-	I.sort(reverse=True)
-	T = Final_ExpressTI(          m, I, graph)
+#	I.sort(reverse=True)
+	I = ''.join(sorted(I))[::-1]
+	T = Final_ExpressTI(     str(m), I, graph)
 	A = Final_ConjComm (J_generator, I, graph)
 
 	B = Word()
 	for K in A.letters:
-		B += Final_ConjComm(K, [m], graph)
+		B += Final_ConjComm(K, str(m), graph)
 
 #	print('T=({},{})={}'.format  (          m,''.join(map(str,I)), T))
 #	print('A={}^({})={}'.format  (J_generator,''.join(map(str,I)), A))
@@ -449,8 +456,8 @@ def NewRelation(m, I, J_generator, graph):
 
 
 def PolygonRelation(m):
-	graph=nx.cycle_graph(range(1,m+1))
-	T,A,B = NewRelation(m, list(range(2,m-1)), Comm([m-1,1],False), graph)
+	graph=nx.cycle_graph(map(str,range(1,m+1)))
+	T,A,B = NewRelation(m, ''.join(map(str,range(2,m-1))), Comm(str(m-1)+'1',False), graph)
 #	print('RELATION IN {}-gon: {}=id'.format(m,T+A-T-B))
 	return T+A-T-B
 #----------------------------------------------------------------------------
@@ -466,15 +473,12 @@ def Comm_ToStr(K):
 	if K.invert:
 		return Comm_ToStr(-K)[::-1]
 	if len(K)==2:
-#		return [    K.elems[0],     K.elems[1] ]*2
-		return (str(K.elems[0])+str(K.elems[1]))*2
+		return (K.elems[0]+K.elems[1])*2
 	s = Comm_ToStr(K.Inner())
-	return str(K.elems[0]) + s[::-1] + str(K.elems[0]) + s
-#	return    [K.elems[0]] + s[::-1] +    [K.elems[0]] + s
+	return K.elems[0]+s[::-1]+K.elems[0]+s
 
 def Word_ToStr(W):
 	return ''.join(map(Comm_ToStr,W.letters))
-#	return sum(map(Comm_ToList,W.letters),start=[])
 
 def SimplifyStr(s, m, graph):
 	upd = True
@@ -488,8 +492,7 @@ def SimplifyStr(s, m, graph):
 #			print('lt={}, i={}, L[i+1:]={}'.format(lt,i,L[i+1:]))
 			if lt in s[i+1:]:
 				nextpos = i+1+s[i+1:].index(lt)#следующая позиция её вхождения
-#				if all(AreAdjacent(lt,ot,graph) for ot in L[i+1:nextpos]):
-				if all(AreAdjacent(int(lt),int(ot),graph) for ot in s[i+1:nextpos]):
+				if all(AreAdjacent(lt,ot,graph) for ot in s[i+1:nextpos]):
 #					print('found: {}'.format(L[i:nextpos+1]))
 					n -= 2
 					s = s[:i]+s[i+1:nextpos]+s[nextpos+1:]
@@ -512,7 +515,7 @@ for m in range(4,9):
 	wd = Word_ToStr(rel)
 	wtolist_time = time.time()
 	print('  put to list in {} seconds;'.format(wtolist_time-calcrel_time))
-	swd = SimplifyStr(wd, m, nx.cycle_graph(range(1,m+1)))
+	swd = SimplifyStr(wd, m, nx.cycle_graph(map(str,range(1,m+1))))
 	simplify_time = time.time()
 	print('  simplified  in {} seconds;'.format(simplify_time-wtolist_time))
 	print('simplification: "{}"'.format(swd))
