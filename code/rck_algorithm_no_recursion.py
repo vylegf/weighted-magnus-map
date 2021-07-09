@@ -16,13 +16,9 @@ class Comm:
 			return
 
 		if len(args) == 1:
-			self.elems = args[0]
-			self.invert = False
+			self.elems  = args[0].elems[:]
+			self.invert = args[0].invert
 			return
-#		if len(args) == 1:
-#			self.elems  = args[0].elems[:]
-#			self.invert = args[0].invert
-#			return
 
 		if len(args) == 2:
 			elems, invert = args
@@ -112,10 +108,9 @@ class Word:
 		return self + (-other)
 
 	def __neg__(self):
-#		if not len(self):
-#			return Word()
-		return LTW([-let for let in reversed(self.letters)])
-#		return LTW([-self.letters[i] for i in reversed(range(len(self)))])
+		if not len(self):
+			return Word()
+		return LTW([-self.letters[i] for i in reversed(range(len(self)))])
 
 	def __repr__(self):
 		return 'Word['+''.join(str(K) for K in self.letters)+']'
@@ -131,13 +126,9 @@ class Word:
 
 #делает из коммутатора однобуквенное слово
 def CTW(K):
-	return Word(K,False)
+	return Word(K, False)
 
 def LTW(lets):
-#	ans = Word()
-#	for lt in lets:
-#		ans += CTW(lt)
-#	return ans
 	ans = Word()
 	ans.letters = lets
 	return ans
@@ -145,8 +136,8 @@ def LTW(lets):
 #считает (g,K)
 def Comm_CL(g,K):
 	#tcomm=(g,|K|)
-	tcomm = CTW(Comm([g]+K.elems))
-	if not K.invert:
+	tcomm = CTW(Comm([g]+K.elems, False))
+	if K.invert == False:
 		return tcomm
 	else:
 		#Если K=L^{-1}, то (g,K)=K^{-1}(g,L)^{-1}K
@@ -176,7 +167,7 @@ def Word_CR(W,g):
 	#благодаря ему можно вызывать Calc_WI(W,I) для W=число.
 	#возможно, его аналоги надо поставить и в других местах
 	if type(W) == type(1):
-		return CTW(Comm([W,g]))
+		return CTW(Comm([W,g],False))
 	return -Word_CL(g,W)
 
 #[a,b,c,d] -> запись элемента (((a,b),c),d) через обычные коммутаторы
@@ -215,11 +206,11 @@ def Word_TTI(W):
 
 #просто переставляет эту позицию с той, которая чуть правее
 def Comm_SimpleSwapRight(K, pos):
-	if K.invert:
+	if K.invert == True:
 		return -Comm_SimpleSwapRight(-K,pos)
 	n = len(K)
 	if pos >= n-3:
-		print('wrong swap in Comm_SimpleSwapRight')
+		print('something is wrong in Comm_SimpleSwapRight')
 	a = K.elems[pos]
 	b = K.elems[pos+1]
 	tail = K.elems[pos+2:]
@@ -260,9 +251,9 @@ def Comm_MaxToItsPlace(K):
 	if maxpos == n-2:
 		return CTW(K)
 	if maxpos == n-1:
-		#ВОЗМОЖНО, НУЖНА ПОДСТРАХОВКА (она закомментирована)
-		return Comm_TTI(K)
-#		return Word_MaxToItsPlace(Comm_TTI(K))
+		#ПОДСТРАХОВКА: кажется, верхнюю функцию не надо навешивать, но не проверял.
+#		return Comm_TTI(K)
+		return Word_MaxToItsPlace(Comm_TTI(K))
 	if maxpos < n-3:
 		wd = Comm_SimpleSwapRight(K, maxpos)
 		return Word_MaxToItsPlace(wd)
@@ -301,8 +292,110 @@ def Word_MaxToItsPlace(W):
 #	return sum(map(Comm_ExpressInFree,W.letters),start=Word())
 
 #сортируем все элементы, кроме двух последних
-def Comm_SortElems(K):
+
+
+def Word_SortElems(W):
+	return sum(map(Comm_SortElems,W.letters),start=Word())
+
+#----------------------------------
+#ФУНКЦИИ С УЧАСТИЕМ ГРАФА (САМЫЕ ГЛАВНЫЕ)
+
+def Comm_IsCanonical(K, graph):
+	els = K.elems
+	last = els[-1]
+	n = len(els)
+	maxel = max(els)
+	maxpos = els.index(maxel)
+	if maxpos != n-2:
+		return False
+	if AreInSameComponent(maxel, last, graph):
+		return False
+	if last != MinInComponent(last,graph):
+		return False
+	if n == 2:
+		return True
+	return all(els[i] < els[i+1] for i in range(n-2))
+
+#улучшает ситуацию с неканоническим коммутатором
+def Comm_Updated(K, graph):
 	if K.invert:
+		return -Comm_Updated(-K,graph)
+	els = K.elems
+	last = els[-1]
+	n = len(els)
+	maxel = max(els)
+	maxpos = els.index(maxel)
+	if AreAdjacent(els[-1], els[-2], graph):
+		return Word()
+	if maxpos != n-2:
+		return Comm_MaxToItsPlace(K)
+	if AreInSameComponent(maxel, last, graph):
+		if n == 2:
+			return Word()
+		fst = FirstStep(last, maxel, graph)
+		if els.index(fst) == n-3 and AreAdjacent(fst, maxel, graph):
+			return Word()
+		else:
+			fstpos = els.index(fst)
+			if fstpos < n-3:
+				return Comm_SimpleSwapRight(K,fstpos)
+			elif fstpos == n-3:
+				a,b,x=fst,maxel,last
+				#пользуемся тем, что (a,x)=id; b - наибольший
+				#поэтому (a,(b,x))=(x,(b,a))(a,b)(x,b)(b,a)(b,x)
+				if a > b:
+					ab = Comm([a,b], False)
+					ba = Comm([a,b], True)
+				else:
+					ab = Comm([b,a], True)
+					ba = Comm([b,a], False)
+				wd = LTW([
+					Comm([x,b,a], False),
+					ab,
+					Comm([x,b], False),
+					ba,
+					Comm([x,b], True)
+					])
+				for el in els[-4::-1]:
+					wd = Word_CL(el,wd)
+				return wd
+	if last != MinInComponent(last, graph):
+		mic = MinInComponent(last, graph)
+		micpos = els.index(mic)
+#		if micpos == n-1:
+#			return Comm_SortElems(K)
+		fst = FirstStep(last, mic, graph)
+		fstpos = els.index(fst)
+		if fstpos < n-3:
+			return Comm_SimpleSwapRight(K,fstpos)
+		elif fstpos == n-3:
+			a,b,x=fst,maxel,last
+			#пользуемся тем, что (a,x)=id; b - наибольший
+			#поэтому (a,(b,x))=(x,(b,a))(a,b)(x,b)(b,a)(b,x)
+			if a > b:
+				ab = Comm([a,b], False)
+				ba = Comm([a,b], True)
+			else:
+				ab = Comm([b,a], True)
+				ba = Comm([b,a], False)
+			wd = LTW([
+				Comm([x,b,a], False),
+				ab,
+				Comm([x,b], False),
+				ba,
+				Comm([x,b], True)
+				])
+			for el in els[-4::-1]:
+				wd = Word_CL(el,wd)
+			#print('we are reduced to {}.\n'.format(wd))
+			return wd
+	for i in range(n-3):
+		if els[i] > els[i+1]:
+			return Comm_SimpleSwapRight(K,i)
+#	return Comm_SortElems(K)
+
+def Comm_SortElems(K):
+	if K.invert == True:
 		return -Comm_SortElems(-K)
 	n = len(K)
 	elems = K.elems
@@ -312,101 +405,33 @@ def Comm_SortElems(K):
 		if elems[i] > elems[i+1]:
 			return Word_SortElems(Comm_SimpleSwapRight(K,i))
 	return CTW(K)
+#	else:
+#		mic = MinInComponent(last, G)
+#		micpos = els.index(mic)
+#		if micpos == n-1:
+#			return Comm_SortElems(K)
+#			#нужное достигнуто, осталось отсортировать и убить двухэлементные
+#			return Word_KillObvious(Comm_SortElems(K),graph)
+#		fst = FirstStep(last, mic, G)
 
-def Word_SortElems(W):
-	return sum(map(Comm_SortElems,W.letters),start=Word())
+def Word_ExpressThroughBasis(W, graph):
+	expressed = False
+	while not expressed:
+		expressed = True
+		temp_W = Word()
+		for K in W.letters:
+			if not Comm_IsCanonical(K, graph.subgraph(K.elems)):
+#				print('{} is not canonical'.format(K))
+				expressed = False
+				temp_W += Comm_Updated(K, graph.subgraph(K.elems))
+#				print('{} -> {}'.format(K, Comm_Updated(K, graph.subgraph(K.elems))))
+			else:
+				temp_W += CTW(K)
+		W = temp_W
+#		print(W)
+	return W
+#		expressed = all(Comm_IsCanonical(K, graph) for K in W.letters)
 
-#----------------------------------
-#ФУНКЦИИ С УЧАСТИЕМ ГРАФА (САМЫЕ ГЛАВНЫЕ)
-
-
-def Comm_ExpressThroughBasis(K,graph):
-	if K.invert:
-		return -Comm_ExpressThroughBasis(-K,graph)
-	els = K.elems
-	n = len(els)
-
-	if graph.has_edge(els[-1],els[-2]):
-		return Word()
-
-	maxel = max(els)
-	maxpos = els.index(maxel)
-
-	if n == 2:
-		if maxpos == 1:
-#			return CTW(Comm(K.elems[::-1], True))
-			a, b = K.elems
-			return CTW(Comm([b,a], True))
-		return CTW(K)
-
-	if graph.has_edge(els[-1], els[-3]) and graph.has_edge(els[-2], els[-3]):
-		return Word()
-
-	G = graph.subgraph(els)
-	#добиваемся того, чтобы максимум стоял на своём месте
-	if Comm_IsCanonical(K, G):
-		return CTW(K)
-
-	if maxpos != n-2:
-		return Word_ExpressThroughBasis(Comm_MaxToItsPlace(K), G)
-
-	last = els[-1]
-
-	if AreInSameComponent(last, maxel, G):
-		fst = FirstStep(last, maxel, G)
-	else:
-		mic = MinInComponent(last, G)
-		if mic == last:
-			#осталось отсортировать
-			return Word_ExpressThroughBasis(Comm_SortElems(K), G)
-		micpos = els.index(mic)
-		fst = FirstStep(last, mic, G)
-
-	fstpos = els.index(fst)
-	if fstpos < n-3:
-		return Word_ExpressThroughBasis(Comm_SimpleSwapRight(K,fstpos), G)
-	elif fstpos == n-3:
-		a,b,x=fst,maxel,last
-		#пользуемся тем, что (a,x)=id; b - наибольший
-		#поэтому (a,(b,x))=(x,(b,a))(a,b)(x,b)(b,a)(b,x)
-		if a > b:
-			ab = Comm([a,b], False)
-			ba = Comm([a,b], True)
-		else:
-			ab = Comm([b,a], True)
-			ba = Comm([b,a], False)
-		wd = LTW([
-			Comm([x,b,a], False),
-			ab,
-			Comm([x,b], False),
-			ba,
-			Comm([x,b], True)
-			])
-		for el in els[-4::-1]:
-			wd = Word_CL(el,wd)
-		#print('we are reduced to {}.\n'.format(wd))
-		return Word_ExpressThroughBasis(wd, G)
-	else:
-		print('something is wrong in Comm_ExpressThroughBasis: fstpos > n-3')
-
-def Word_ExpressThroughBasis(W,graph):
-	ans = Word()
-	for K in W.letters:
-		ans += Comm_ExpressThroughBasis(K,graph)
-	return ans
-
-#def Word_KillObvious(W,graph):
-#	ans = Word()
-#	for K in W.letters:
-#		if not graph.has_edge(K.elems[-1],K.elems[-2]):
-#			if len(K) == 2:
-#				ans += CTW(K)
-#			elif (not graph.has_edge(K.elems[-1], K.elems[-3])) or\
-#				 (not graph.has_edge(K.elems[-2], K.elems[-3])):
-#				if not Comm_IsCanonical(K,graph.subgraph(K.elems)):
-#					print('{} is not canonical?! (in KillObvious)'.format(K))
-#				ans += CTW(K)
-#	return ans
 
 #-----------------------------------------------------------
 #         вспомогательное про графы
@@ -420,27 +445,13 @@ def AreInSameComponent(i,j, G):
 def MinInComponent(i, G):
 	return min(nx.node_connected_component(G,i))
 
+#соединены ли ребром
+def AreAdjacent(i,j, G):
+	return G.has_edge(i,j)
+
 #первая вершина на пути от i к j в графе G
 def FirstStep(i,j, G):
 	return nx.shortest_path(G,source=i,target=j)[1]
-
-def Comm_IsCanonical(K, graph):
-	els = K.elems
-	last = els[-1]
-	n = len(els)
-	maxel = max(els)
-	if els.index(maxel) != n-2:
-#		print(' {} not canonical since maxpos = {} != {}'.format(K, maxpos, n-2))
-		return False
-	if AreInSameComponent(maxel, last, graph):
-#		print(' {} not canonical since {} and {} are in same component'.format(
-#			K, maxel, last))
-		return False
-	if last != MinInComponent(last,graph):
-		return False
-	if n == 2:
-		return True
-	return all(els[i] < els[i+1] for i in range(n-2))
 
 #--------------------------------------------------------------------------
 #         ключевые вычисления для общего алгоритма
@@ -460,8 +471,8 @@ def Final_ConjComm(K,I,graph):
 
 #из соотношения подграфа на первых (m-1) вершинах
 #делаем новое соотношение сопряжением
-#def OldRelation(m, R, graph):
-#	return Final_ConjComm(R, [m], graph)
+def OldRelation(m, R, graph):
+	return Final_ConjComm(R, [m], graph)
 
 #если все вершины образующей J соединены с m в графе,
 #и ни одна из вершин I не соединена,
@@ -476,20 +487,13 @@ def NewRelation(m, I, J_generator, graph):
 		))
 
 	I.sort(reverse=True)
-	tstart_time = time.time()
 	T = Final_ExpressTI(          m, I, graph)
-	tend_time = time.time()
-	print('T: {} seconds'.format(tend_time - tstart_time))
-	astart_time = time.time()
 	A = Final_ConjComm (J_generator, I, graph)
-	aend_time = time.time()
-	print('A: {} seconds'.format(aend_time - astart_time))
-	bstart_time = time.time()
+
 	B = Word()
 	for K in A.letters:
 		B += Final_ConjComm(K, [m], graph)
-	bend_time = time.time()
-	print('B: {} seconds'.format(bend_time - bstart_time))
+
 #	print('T=({},{})={}'.format  (          m,''.join(map(str,I)), T))
 #	print('A={}^({})={}'.format  (J_generator,''.join(map(str,I)), A))
 #	print('B={}^({}{})={}'.format(J_generator,''.join(map(str,I)), m, B))
@@ -515,12 +519,15 @@ def Comm_ToStr(K):
 	if K.invert:
 		return Comm_ToStr(-K)[::-1]
 	if len(K)==2:
+#		return [    K.elems[0],     K.elems[1] ]*2
 		return (str(K.elems[0])+str(K.elems[1]))*2
 	s = Comm_ToStr(K.Inner())
 	return str(K.elems[0]) + s[::-1] + str(K.elems[0]) + s
+#	return    [K.elems[0]] + s[::-1] +    [K.elems[0]] + s
 
 def Word_ToStr(W):
 	return ''.join(map(Comm_ToStr,W.letters))
+#	return sum(map(Comm_ToList,W.letters),start=[])
 
 def SimplifyStr(s, m, graph):
 	upd = True
@@ -531,31 +538,34 @@ def SimplifyStr(s, m, graph):
 		for ti in range(n):
 			i = (ti+currshift) % n
 			lt = s[i]#текущая буква
+#			print('lt={}, i={}, L[i+1:]={}'.format(lt,i,L[i+1:]))
 			if lt in s[i+1:]:
 				nextpos = i+1+s[i+1:].index(lt)#следующая позиция её вхождения
-				if all(graph.has_edge(int(lt),int(ot)) for ot in s[i+1:nextpos]):
+#				if all(AreAdjacent(lt,ot,graph) for ot in L[i+1:nextpos]):
+				if all(AreAdjacent(int(lt),int(ot),graph) for ot in s[i+1:nextpos]):
+#					print('found: {}'.format(L[i:nextpos+1]))
 					n -= 2
 					s = s[:i]+s[i+1:nextpos]+s[nextpos+1:]
 					upd = True
 					currshift = i-1#так быстрее всего убирать abcddcba
 					break
+#				else:
+#					print('not found: {}'.format(L[i:nextpos+1]))
+
+#			if not upd:
+#				print('nothing good at {}/{}'.format(i, n))
 	return s
 
-for m in range(4,10):
+for m in range(4,9):
 	print('m={}:'.format(m))
 	start_time = time.time()
 	rel = PolygonRelation(m)
-	print(len(rel))
 	calcrel_time = time.time()
+	print(len(rel))
 	print('  calculated  in {} seconds;'.format(calcrel_time-start_time))
-	for K in rel.letters:
-		if not Comm_IsCanonical(K, nx.cycle_graph(range(1,m+1)).subgraph(K.elems)):
-			print('{} is not canonical!!'.format(K))
-	check_time = time.time()
-	print('checked canon.in {} seconds;'.format(check_time-calcrel_time))
 	wd = Word_ToStr(rel)
 	wtolist_time = time.time()
-	print('  put to list in {} seconds;'.format(wtolist_time-check_time))
+	print('  put to list in {} seconds;'.format(wtolist_time-calcrel_time))
 	swd = SimplifyStr(wd, m, nx.cycle_graph(range(1,m+1)))
 	simplify_time = time.time()
 	print('  simplified  in {} seconds;'.format(simplify_time-wtolist_time))
@@ -568,7 +578,7 @@ for m in range(4,10):
 #swd = SimplifyList(wd, m, nx.cycle_graph(range(1,m+1)))
 
 #если f(m) - количество букв в соотношении для m-угольника, то
-#f(4)=4, f(5)=34, f(6)=192, f(7)=916, f(8)=3976, f(9)=16268
+#f(4)=4, f(5)=34, f(6)=192, f(7)=944, f(8)=5780, f(9)=101510
 
 #for i in range(4,10):
 #	start_time =
