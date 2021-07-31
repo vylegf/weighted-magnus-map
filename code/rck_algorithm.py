@@ -4,11 +4,14 @@ import itertools as it
 import sys
 import time
 
+finaldict={}
+sorteddict={}
+maxtopdict={}
+
 #вложенный коммутатор вида (a,(b,(c,(d,e)))) (или обратный к нему)
 #elems = [a,b,c,d,e]
 class Comm:
-	elems = []
-	invert = False
+	__slots__ = ['elems', 'invert']
 
 	def __init__(self, *args):
 		if len(args) == 0:
@@ -32,6 +35,9 @@ class Comm:
 
 		print('error: too many args in Comm.__init__(*args)')
 
+	def __hash__(self):
+		return hash(tuple([self.invert]+self.elems))
+
 	def __len__(self):
 		return len(self.elems)
 
@@ -53,13 +59,16 @@ class Comm:
 		if len(self) < 2:
 			print('something is wrong: len(Comm)<2.')
 			return
-		if len(self) == 2:
-			return '({},{})'.format(self.elems[0], self.elems[1])
-		else:
-			return '({},{})'.format(self.elems[0], self.Inner().StringForm())
+		let = chr(ord('a')+len(self)-2)
+		return let + '_{' + ''.join(map(str,self.elems)) + '}'
+#		if len(self) == 2:
+#			return '({},{})'.format(self.elems[0], self.elems[1])
+#		else:
+#			return '({},{})'.format(self.elems[0], self.Inner().StringForm())
 
 	def __str_(self):
-		ans = 'Comm'+self.StringForm()
+#		ans = 'Comm'+self.StringForm()
+		ans = self.StringForm()
 		if self.invert:
 			ans += '^{-1}'
 		return ans
@@ -72,7 +81,8 @@ class Comm:
 
 #слово от вложенных коммутаторов (letters - список элементов типа Comm)
 class Word:
-	letters = []
+	__slots__ = ['letters']
+
 	def __init__(self, *args):
 		if len(args) == 0:
 			self.letters = []
@@ -115,15 +125,14 @@ class Word:
 #		if not len(self):
 #			return Word()
 		return LTW([-let for let in reversed(self.letters)])
-#		return LTW([-self.letters[i] for i in reversed(range(len(self)))])
 
 	def __repr__(self):
-		return 'Word['+''.join(str(K) for K in self.letters)+']'
-#		return ''.join(str(K) for K in self.letters)
+#		return 'Word['+''.join(str(K) for K in self.letters)+']'
+		return ''.join(str(K) for K in self.letters)
 
 	def __str__(self):
-		return 'Word['+''.join(str(K) for K in self.letters)+']'
-#		return ''.join(str(K) for K in self.letters)
+#		return 'Word['+''.join(str(K) for K in self.letters)+']'
+		return ''.join(str(K) for K in self.letters)
 
 #-------------------------------------------------------------------------------------
 #                 простейшие операции
@@ -134,13 +143,13 @@ def CTW(K):
 	return Word(K,False)
 
 def LTW(lets):
+	ans = Word()
+	ans.letters = lets
+	return ans
 #	ans = Word()
 #	for lt in lets:
 #		ans += CTW(lt)
 #	return ans
-	ans = Word()
-	ans.letters = lets
-	return ans
 
 #считает (g,K)
 def Comm_CL(g,K):
@@ -248,24 +257,35 @@ def Comm_SimpleSwapRight(K, pos):
 		wd = Word_CL(x,wd)
 	return wd
 #--------------------------------------------------------------------------
-#          Панов-Верёвкин
+#                     Панов-Верёвкин
 #--------------------------------------------------------------------------
 #добиваемся того, чтобы максимум стоял на предпоследнем месте
 def Comm_MaxToItsPlace(K):
+	global maxtopdict
+	if K in maxtopdict:
+		return maxtopdict[K]
+
 	if K.invert:
-		return -Comm_MaxToItsPlace(-K)
+		maxtopdict[K] = -Comm_MaxToItsPlace(-K)
+		return maxtopdict[K]
+#		return -Comm_MaxToItsPlace(-K)
 	els = K.elems
 	maxpos = els.index(max(els))
 	n = len(els)
 	if maxpos == n-2:
+		maxtopdict[K] = CTW(K)
 		return CTW(K)
 	if maxpos == n-1:
 		#ВОЗМОЖНО, НУЖНА ПОДСТРАХОВКА (она закомментирована)
-		return Comm_TTI(K)
+		maxtopdict[K] = Comm_TTI(K)
+		return maxtopdict[K]
+#		return Comm_TTI(K)
 #		return Word_MaxToItsPlace(Comm_TTI(K))
 	if maxpos < n-3:
 		wd = Comm_SimpleSwapRight(K, maxpos)
-		return Word_MaxToItsPlace(wd)
+		maxtopdict[K] = Word_MaxToItsPlace(wd)
+		return maxtopdict[K]
+#		return Word_MaxToItsPlace(wd)
 	if maxpos == n-3:
 		m,a,b = els[-3:]
 		if a > b:
@@ -287,7 +307,9 @@ def Comm_MaxToItsPlace(K):
 			ab])
 		for el in els[-4::-1]:
 			wd = Word_CL(el,wd)
-		return Word_MaxToItsPlace(wd)
+		maxtopdict[K] = Word_MaxToItsPlace(wd)
+		return maxtopdict[K]
+#		return Word_MaxToItsPlace(wd)
 	else:
 		print('something is wrong in Comm_MaxToItsPlace')
 
@@ -302,16 +324,22 @@ def Word_MaxToItsPlace(W):
 
 #сортируем все элементы, кроме двух последних
 def Comm_SortElems(K):
+	global sorteddict
+	if K in sorteddict:
+		return sorteddict[K]
 	if K.invert:
-		return -Comm_SortElems(-K)
+		sorteddict[K] = -Comm_SortElems(-K)
+		return sorteddict[K]
 	n = len(K)
 	elems = K.elems
 	for i in range(n-3):
 		if elems[i] == elems[i+1]:
 			print('error: equal elems!')
 		if elems[i] > elems[i+1]:
-			return Word_SortElems(Comm_SimpleSwapRight(K,i))
-	return CTW(K)
+			sorteddict[K] = Word_SortElems(Comm_SimpleSwapRight(K,i))
+			return sorteddict[K]
+	sorteddict[K] = CTW(K)
+	return sorteddict[K]
 
 def Word_SortElems(W):
 	return sum(map(Comm_SortElems,W.letters),start=Word())
@@ -321,34 +349,50 @@ def Word_SortElems(W):
 
 
 def Comm_ExpressThroughBasis(K,graph):
+	global finaldict
+	if K in finaldict:
+		return finaldict[K]
+
 	if K.invert:
-		return -Comm_ExpressThroughBasis(-K,graph)
+		finaldict[K] = -Comm_ExpressThroughBasis(-K, graph)
+		return finaldict[K]
+#		return -Comm_ExpressThroughBasis(-K,graph)
+
 	els = K.elems
 	n = len(els)
 
 	if graph.has_edge(els[-1],els[-2]):
+		finaldict[K]=Word()
 		return Word()
 
 	maxel = max(els)
 	maxpos = els.index(maxel)
 
 	if n == 2:
+
 		if maxpos == 1:
 #			return CTW(Comm(K.elems[::-1], True))
 			a, b = K.elems
+			finaldict[K]=CTW(Comm([b,a],True))
 			return CTW(Comm([b,a], True))
+
+		finaldict[K]=CTW(K)
 		return CTW(K)
 
 	if graph.has_edge(els[-1], els[-3]) and graph.has_edge(els[-2], els[-3]):
+		finaldict[K]=Word()
 		return Word()
 
 	G = graph.subgraph(els)
 	#добиваемся того, чтобы максимум стоял на своём месте
 	if Comm_IsCanonical(K, G):
+		finaldict[K]=CTW(K)
 		return CTW(K)
 
 	if maxpos != n-2:
-		return Word_ExpressThroughBasis(Comm_MaxToItsPlace(K), G)
+		finaldict[K] = Word_ExpressThroughBasis(Comm_MaxToItsPlace(K), G)
+		return finaldict[K] 
+#		return Word_ExpressThroughBasis(Comm_MaxToItsPlace(K), G)
 
 	last = els[-1]
 
@@ -358,13 +402,15 @@ def Comm_ExpressThroughBasis(K,graph):
 		mic = MinInComponent(last, G)
 		if mic == last:
 			#осталось отсортировать
-			return Word_ExpressThroughBasis(Comm_SortElems(K), G)
+			finaldict[K] = Word_ExpressThroughBasis(Comm_SortElems(K), G)
+			return finaldict[K]
 		micpos = els.index(mic)
 		fst = FirstStep(last, mic, G)
 
 	fstpos = els.index(fst)
 	if fstpos < n-3:
-		return Word_ExpressThroughBasis(Comm_SimpleSwapRight(K,fstpos), G)
+		finaldict[K] = Word_ExpressThroughBasis(Comm_SimpleSwapRight(K,fstpos), G)
+		return finaldict[K]
 	elif fstpos == n-3:
 		a,b,x=fst,maxel,last
 		#пользуемся тем, что (a,x)=id; b - наибольший
@@ -385,7 +431,8 @@ def Comm_ExpressThroughBasis(K,graph):
 		for el in els[-4::-1]:
 			wd = Word_CL(el,wd)
 		#print('we are reduced to {}.\n'.format(wd))
-		return Word_ExpressThroughBasis(wd, G)
+		finaldict[K] = Word_ExpressThroughBasis(wd, G)
+		return finaldict[K]
 	else:
 		print('something is wrong in Comm_ExpressThroughBasis: fstpos > n-3')
 
@@ -476,26 +523,38 @@ def NewRelation(m, I, J_generator, graph):
 		))
 
 	I.sort(reverse=True)
+
 	tstart_time = time.time()
+
 	T = Final_ExpressTI(          m, I, graph)
+
 	tend_time = time.time()
 	print('T: {} seconds'.format(tend_time - tstart_time))
 	astart_time = time.time()
+
 	A = Final_ConjComm (J_generator, I, graph)
+
 	aend_time = time.time()
 	print('A: {} seconds'.format(aend_time - astart_time))
 	bstart_time = time.time()
-	B = Word()
+
+	#должно быть чуть быстрее, чем через Final_ConjComm
+	B0 = Word()
 	for K in A.letters:
-		B += Final_ConjComm(K, [m], graph)
+		B0 += CTW(K) + Calc_WI(CTW(K), [m])
+	B = Word_ExpressThroughBasis(B0, graph)
+
+#	B = Word()
+#	for K in A.letters:
+#		B += Final_ConjComm(K, [m], graph)
+
 	bend_time = time.time()
 	print('B: {} seconds'.format(bend_time - bstart_time))
+
 #	print('T=({},{})={}'.format  (          m,''.join(map(str,I)), T))
 #	print('A={}^({})={}'.format  (J_generator,''.join(map(str,I)), A))
 #	print('B={}^({}{})={}'.format(J_generator,''.join(map(str,I)), m, B))
 	return (T,A,B)
-
-
 
 def PolygonRelation(m):
 	graph=nx.cycle_graph(range(1,m+1))
@@ -515,9 +574,11 @@ def Comm_ToStr(K):
 	if K.invert:
 		return Comm_ToStr(-K)[::-1]
 	if len(K)==2:
-		return (str(K.elems[0])+str(K.elems[1]))*2
+		return (chr(K.elems[0]+ord('0'))+chr(K.elems[1]+ord('0')))*2
+#		return (str(K.elems[0])+str(K.elems[1]))*2
 	s = Comm_ToStr(K.Inner())
-	return str(K.elems[0]) + s[::-1] + str(K.elems[0]) + s
+	return chr(K.elems[0]+ord('0')) + s[::-1] + chr(K.elems[0]+ord('0')) + s
+#	return str(K.elems[0]) + s[::-1] + str(K.elems[0]) + s
 
 def Word_ToStr(W):
 	return ''.join(map(Comm_ToStr,W.letters))
@@ -533,7 +594,10 @@ def SimplifyStr(s, m, graph):
 			lt = s[i]#текущая буква
 			if lt in s[i+1:]:
 				nextpos = i+1+s[i+1:].index(lt)#следующая позиция её вхождения
-				if all(graph.has_edge(int(lt),int(ot)) for ot in s[i+1:nextpos]):
+				if all(graph.has_edge(ord(lt)-ord('0'),
+									  ord(ot)-ord('0'))
+						for ot in s[i+1:nextpos]):
+#				if all(graph.has_edge(int(lt),int(ot)) for ot in s[i+1:nextpos]):
 					n -= 2
 					s = s[:i]+s[i+1:nextpos]+s[nextpos+1:]
 					upd = True
@@ -541,44 +605,41 @@ def SimplifyStr(s, m, graph):
 					break
 	return s
 
-for m in range(4,10):
+#------------------------------------------------------------------
+#                      MAIN.CPP
+#-----------------------------------------------------------------
+for m in range(4,11):
+	finaldict={}
+	maxtopdict={}
+	sorteddict={}
 	print('m={}:'.format(m))
 	start_time = time.time()
 	rel = PolygonRelation(m)
-	print(len(rel))
+	print('relation has len={} (expected 4x{}={})'.format(len(rel),1+(m-4)*2**(m-3),4+(m-4)*2**(m-1)))
+#	print(rel)
 	calcrel_time = time.time()
-	print('  calculated  in {} seconds;'.format(calcrel_time-start_time))
+	print('  calculated   in {} seconds;'.format(calcrel_time-start_time))
 	for K in rel.letters:
 		if not Comm_IsCanonical(K, nx.cycle_graph(range(1,m+1)).subgraph(K.elems)):
 			print('{} is not canonical!!'.format(K))
 	check_time = time.time()
-	print('checked canon.in {} seconds;'.format(check_time-calcrel_time))
+	print('checked canon. in {} seconds;'.format(check_time-calcrel_time))
 	wd = Word_ToStr(rel)
+#	print(wd)
 	wtolist_time = time.time()
-	print('  put to list in {} seconds;'.format(wtolist_time-check_time))
+	print('  put to list  in {} seconds;'.format(wtolist_time-check_time))
 	swd = SimplifyStr(wd, m, nx.cycle_graph(range(1,m+1)))
 	simplify_time = time.time()
-	print('  simplified  in {} seconds;'.format(simplify_time-wtolist_time))
+	print('  simplified   in {} seconds;'.format(simplify_time-wtolist_time))
 	print('simplification: "{}"'.format(swd))
-#	swd = SimplifyList(wd, m, nx.cycle_graph(range(1,m+1)))
-
-#m=5
-#rel = PolygonRelation(m)
-#wd= Word_ToList(rel)
-#swd = SimplifyList(wd, m, nx.cycle_graph(range(1,m+1)))
+#	print(finaldict)
+	print('{}+{}+{}={} commutators in dictionaries'.format(
+		len(maxtopdict),
+		len(sorteddict),
+		len(finaldict),
+		len(maxtopdict)+len(sorteddict)+len(finaldict)))
 
 #если f(m) - количество букв в соотношении для m-угольника, то
-#f(4)=4, f(5)=34, f(6)=192, f(7)=916, f(8)=3976, f(9)=16268
-
-#for i in range(4,10):
-#	start_time =
-#print(rel)
-#print('"'+''.join(map(str,wd))+'"')
-#print('simplified to "'+''.join(map(str,swd))+'"')
-
-
-#fout = open('9-gon relation', 'w')
-#print(rel, file=fout)
-#print('"'+''.join(map(str,wd))+'"', file=fout)
-#print('simplified to "'+''.join(map(str,swd))+'"', file=fout)
-#fout.close()
+#f(4)=4, f(5)=34, f(6)=192, f(7)=916, f(8)=3976, f(9)=16268, f(10)=63940
+#были бы соотношения минимальной длины - было бы
+#g(4)=4, g(5)=20, g(6)= 68, g(7)=196, g(8)= 516, g(9)= 1284, g(10)= 3076
